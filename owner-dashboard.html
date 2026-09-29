@@ -154,7 +154,8 @@ No Reviews Yet
 import {
   db,
   ref,
-  set
+  set,
+  get
 } from "./firebase.js";
 
 let ownerEmail =
@@ -165,21 +166,25 @@ alert("Please Login First");
 window.location.href="owner-login.html";
 }
 
-let messes =
-JSON.parse(localStorage.getItem("messes")) || [];
+let ownerMess;
 
-let ownerMess =
-messes.find(
-m => m.ownerEmail === ownerEmail
-);
+loadOwnerData();
 
-if(!ownerMess){
-document.getElementById("messInfo").innerHTML =
-"<h2>No Mess Found For This Account</h2>";
-}else{
-loadData();
+async function loadOwnerData(){
+
+    const snapshot = await get(
+        ref(db,"messes/" + ownerEmail.replace(/[.@]/g,"_"))
+    );
+
+    if(!snapshot.exists()){
+        document.getElementById("messInfo").innerHTML =
+        "<h2>No Mess Found For This Account</h2>";
+        return;
+    }
+
+    ownerMess = snapshot.val();
+    loadData();
 }
-
 function loadData(){
 
 document.getElementById("messInfo").innerHTML = `
@@ -208,6 +213,7 @@ document.getElementById("photoPreview").src =
 ownerMess.photo || "";
 
 showReviews();
+
 }
 
 function previewPhoto(event){
@@ -233,8 +239,14 @@ e.target.result;
 reader.readAsDataURL(file);
 }
 
-function saveDetails(){
+ function saveDetails(){
 
+    if(!ownerMess){
+        alert("Mess data not loaded yet");
+        return;
+    }
+    
+alert("Save button clicked");
 ownerMess.menu =
 document.getElementById("menu").value;
 
@@ -250,18 +262,28 @@ document.getElementById("openTime").value;
 ownerMess.closeTime =
 document.getElementById("closeTime").value;
 
-localStorage.setItem(
-"messes",
-JSON.stringify(messes)
-);
 
-// Save to Firebase
-set(
-ref(db,"messes/"+ownerEmail.replace(/\./g,"_")),
-ownerMess
-);
-
-alert("Details Saved Successfully");
+fetch("http://localhost:5000/messes", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(ownerMess)
+})
+.then(res => res.json())
+.then(data => {
+  console.log("Success:", data);
+})
+.catch(err => {
+  console.error("Error:", err);
+});
+then(res => res.json())
+.then(data => {
+    alert("Details Saved Successfully ✅");
+})
+.catch(error => {
+    alert("Error: " + error);
+});
 }
 
 function showReviews(){
@@ -302,8 +324,11 @@ localStorage.removeItem(
 
 window.location.href =
 "owner-login.html";
+
 }
 
+window.saveDetails = saveDetails;
+window.logout = logout;
 </script>
 
 </body>

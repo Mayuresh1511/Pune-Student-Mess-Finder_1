@@ -112,7 +112,13 @@ Forgot Password?
 
 </div>
 
-<script>
+<script type="module">
+    import {
+db,
+ref,
+set,
+get
+} from "./firebase.js";
 
 function showRegister(){
 
@@ -122,30 +128,19 @@ document.getElementById(
 
 }
 
-function registerOwner(){
+async function registerOwner(){
 
-let messes =
-JSON.parse(localStorage.getItem("messes")) || [];
+try{
 
 let newMess = {
 
-name:
-document.getElementById("newMessName").value,
+name: document.getElementById("newMessName").value,
+location: document.getElementById("newLocation").value,
+price: document.getElementById("newPrice").value,
+type: document.getElementById("newType").value,
 
-location:
-document.getElementById("newLocation").value,
-
-price:
-document.getElementById("newPrice").value,
-
-type:
-document.getElementById("newType").value,
-
-ownerEmail:
-document.getElementById("newEmail").value,
-
-ownerPassword:
-document.getElementById("newPassword").value,
+ownerEmail: document.getElementById("newEmail").value,
+ownerPassword: document.getElementById("newPassword").value,
 
 menu:"",
 photo:"",
@@ -155,21 +150,29 @@ openTime:"",
 closeTime:"",
 reviews:[]
 };
-
-messes.push(newMess);
-
-localStorage.setItem(
-"messes",
-JSON.stringify(messes)
+console.log(newMess);
+alert("Trying to save: " + newMess.ownerEmail);
+await set(
+ref(
+db,
+"messes/" +
+newMess.ownerEmail.replace(/[.@]/g,"_")
+),
+newMess
 );
 
-alert("Account Created Successfully");
+alert("Account Created Successfully ✅");
 
-document.getElementById("registerBox").style.display="none";
+}
+catch(error){
+
+alert("Firebase Error: " + error.message);
+console.log(error);
 
 }
 
-function ownerLogin(){
+}
+async function ownerLogin(){
 
 let email =
 document.getElementById("ownerEmail").value.trim();
@@ -177,16 +180,24 @@ document.getElementById("ownerEmail").value.trim();
 let password =
 document.getElementById("ownerPassword").value.trim();
 
-let messes =
-JSON.parse(localStorage.getItem("messes")) || [];
-
-let owner =
-messes.find(m =>
-m.ownerEmail === email &&
-m.ownerPassword === password
+const snapshot =
+await get(
+ref(
+db,
+"messes/" + email.replace(/[.@]/g,"_")
+)
 );
 
-if(owner){
+if(!snapshot.exists()){
+
+alert("Account Not Found");
+return;
+
+}
+
+let owner = snapshot.val();
+
+if(owner.ownerPassword === password){
 
 localStorage.setItem(
 "ownerLoggedIn",
@@ -198,10 +209,9 @@ window.location.href =
 
 }else{
 
-alert("Invalid Email or Password");
+alert("Invalid Password");
 
 }
-
 }
 function forgotPassword(){
 
@@ -238,6 +248,10 @@ function forgotPassword(){
         alert("Email Not Found");
     }
 }
+window.ownerLogin = ownerLogin;
+window.registerOwner = registerOwner;
+window.showRegister = showRegister;
+window.forgotPassword = forgotPassword;
 </script>
 
 </body>

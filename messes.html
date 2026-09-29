@@ -32,7 +32,13 @@
     <button onclick="filterMess('veg')">🟢 Veg</button>
     <button onclick="filterMess('nonveg')">🔴 Non-Veg</button>
 </div>
+<div style="text-align:center; margin:20px 0;">
+    <button onclick="findLocation()" class="btn">
+        📍 Find Mess Near Me
+    </button>
+</div>
 
+<p id="locationResult"></p>
 <div class="college-container">
 
     <!-- Patil Mess -->
@@ -1090,7 +1096,12 @@ class="btn">
     <p>© 2026 Pune Student Mess Finder</p>
 </footer>
 
-<script>
+<script type="module">
+    import {
+  db,
+  ref,
+  get
+} from "./firebase.js";
 
 function patilMenu(){
 
@@ -1537,25 +1548,31 @@ function toggleFavorite(element){
     );
 }
 
-    
-function findLocation(){
+function findLocation() {
 
-    if(navigator.geolocation){
+    if (navigator.geolocation) {
 
-        navigator.geolocation.getCurrentPosition(
-           
-        );
+        navigator.geolocation.getCurrentPosition(function(position) {
 
-    }else{
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
 
-        document.getElementById(
-            "locationResult"
-        ).innerHTML =
-        "Geolocation not supported.";
+            window.open(
+                "https://www.google.com/maps/search/mess/@"
+                + lat + "," + lng + ",15z",
+                "_blank"
+            );
+
+        });
+
+    } else {
+
+        alert("Geolocation not supported");
 
     }
 
 }
+
 
 function showPosition(position){
 
@@ -1581,58 +1598,7 @@ function showError(){
 }
 function loadOwnerMesses(){
 
-let messes =
-JSON.parse(localStorage.getItem("messes")) || [];
 
-let container =
-document.getElementById("dynamicMesses");
-
-if(!container) return;
-
-container.innerHTML = "";
-
-messes.forEach(mess=>{
-
-container.innerHTML += `
-
-<div class="college-card">
-
-<img src="${
-mess.photo ||
-'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'
-}" alt="Mess Photo">
-
-<h3>${mess.name}</h3>
-
-<p>📍 ${mess.location}</p>
-
-<p>💰 ${mess.price}</p>
-
-<p>🍽 ${mess.type}</p>
-
-<p>📞 ${mess.contactNumber || "Not Available"}</p>
-
-<p>🕒 ${mess.openTime || ""} - ${mess.closeTime || ""}</p>
-
-<p>${mess.menu || "Menu Not Added"}</p>
-
-<a href="${mess.mapLink || '#'}"
-target="_blank"
-class="btn">
-📍 Location
-</a>
-
-<a href="${mess.whatsappLink || '#'}"
-target="_blank"
-class="btn">
-💬 WhatsApp
-</a>
-
-</div>
-
-`;
-
-});
 
 }
 function submitRating(messName, ratingId, selectId, thankYouId){
@@ -1665,6 +1631,7 @@ function submitRating(messName, ratingId, selectId, thankYouId){
 
 window.addEventListener("load", function(){
 
+loadFirebaseMesses();
     let hash = window.location.hash;
 
     if(hash){
@@ -1685,7 +1652,66 @@ window.addEventListener("load", function(){
     }
 
 });
+async function loadFirebaseMesses(){
 
+let container =
+document.getElementById("dynamicMesses");
+
+if(!container) return;
+
+const snapshot =
+await get(ref(db,"messes"));
+
+if(!snapshot.exists()) return;
+
+const data = snapshot.val();
+
+container.innerHTML = "";
+
+Object.values(data).forEach(mess=>{
+
+container.innerHTML += `
+
+<div class="college-card">
+
+<img src="${
+mess.photo ||
+'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'
+}" alt="Mess">
+
+<h3>${mess.name}</h3>
+
+<p>📍 ${mess.location}</p>
+
+<p>💰 ${mess.price}</p>
+
+<p>🍽 ${mess.type}</p>
+
+<p>📞 ${mess.contactNumber || "Not Available"}</p>
+
+<p>🕒 ${mess.openTime || ""} - ${mess.closeTime || ""}</p>
+
+<p>${mess.menu || ""}</p>
+
+<a href="${mess.mapLink || '#'}"
+class="btn"
+target="_blank">
+📍 Location
+</a>
+
+<a href="${mess.whatsappLink || '#'}"
+class="btn"
+target="_blank">
+💬 WhatsApp
+</a>
+
+</div>
+
+`;
+
+});
+
+}
 </script>
 
 </body>

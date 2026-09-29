@@ -64,7 +64,14 @@ Discover the best Veg & Non-Veg messes, dining halls and student meal services.
     <button class="btn" onclick="openMessList()">
 Explore Now
 </button>
+<br><br>
 
+<a href="https://www.google.com/maps/search/mess+near+me"
+   class="btn">
+   📍 Find Messes Near Me
+</a>
+
+<p id="locationResult"></p>
 </section>
 
 
@@ -265,33 +272,9 @@ window.onload = function(){
     loadStatistics();
     loadFavorites();
 }
-function findLocation(){
 
-    if(navigator.geolocation){
 
-        navigator.geolocation.getCurrentPosition(
-        function(position){
 
-            localStorage.setItem(
-                "userLat",
-                position.coords.latitude
-            );
-
-            localStorage.setItem(
-                "userLng",
-                position.coords.longitude
-            );
-
-            window.location.href =
-            "messes.html";
-        });
-
-    }else{
-
-        alert("Location not supported");
-
-    }
-}
 function loadStatistics(){
 
 document.getElementById("totalMesses").innerText = 16;
@@ -393,14 +376,15 @@ function loadFavorites(){
 
         item.className = "college-card";
 
-        item.style.marginBottom = "15px";
-
         item.innerHTML = `
-            <h3>❤️ ${name}</h3>
-            <a href="messes.html" class="btn">
-                Explore Now 
-            </a>
-        `;
+    <h3>❤️ ${name}</h3>
+
+    <a href="messes.html" class="btn">
+        Explore Now
+    </a>
+
+    
+`;
 
         favoriteList.appendChild(item);
 

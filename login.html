@@ -108,9 +108,15 @@ button:hover{
 
 </div>
 
-<script>
+<script type="module">
 
-function login(){
+import {
+    db,
+    ref,
+    get
+} from "./firebase.js";
+
+async function login(){
 
     let username =
     document.getElementById("username").value.trim();
@@ -136,40 +142,37 @@ function login(){
         return;
     }
 
-    /* OWNER LOGIN */
+    /* OWNER LOGIN FROM FIREBASE */
 
-    let owners =
-    JSON.parse(
-        localStorage.getItem("owners")
-    ) || [];
-
-    let owner =
-    owners.find(o =>
-        o.email === username &&
-        o.password === password
+    const snapshot = await get(
+        ref(
+            db,
+            "messes/" + username.replace(/\./g,"_")
+        )
     );
 
-    if(owner){
+    if(snapshot.exists()){
+alert(JSON.stringify(snapshot.val()));
+        let owner = snapshot.val();
 
-        localStorage.setItem(
-            "ownerLoggedIn",
-            owner.email
-        );
+        if(owner.ownerPassword === password){
 
-        window.location.href =
-        "owner-dashboard.html";
+            localStorage.setItem(
+                "ownerLoggedIn",
+                owner.ownerEmail
+            );
 
-    }else{
+            window.location.href =
+            "owner-dashboard.html";
 
-        alert(
-            "Invalid Username or Password"
-        );
-
+            return;
+        }
     }
 
+    alert("Invalid Username or Password");
 }
 
-</script>
+/* IMPORTANT */
+window.login = login;
 
-</body>
-</html>
+</script>
